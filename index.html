@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>кубик одиночества — петербург</title>
+<style>
+  :root{
+    --night:#07060e; --deep:#0d0a17; --ink:#f2ecf6; --dim:#8b7f9c; --soft:#c4b8d4;
+    --pink:#e85da8; --warm:#f0b24a; --line:rgba(232,93,168,.16);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{min-height:100%}
+  body{
+    background:
+      radial-gradient(ellipse 80% 60% at 50% -10%, rgba(232,93,168,.10), transparent 60%),
+      radial-gradient(ellipse 70% 50% at 85% 110%, rgba(240,178,74,.06), transparent 60%),
+      var(--night);
+    color:var(--ink);
+    font-family:-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    -webkit-font-smoothing:antialiased; overflow-x:hidden;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .wrap{max-width:660px;margin:0 auto;padding:44px 22px 70px}
+
+  .mark{font-size:11.5px;letter-spacing:.24em;text-transform:lowercase;color:var(--dim);margin-bottom:30px}
+  .mark b{color:var(--pink);font-weight:600}
+
+  h1{font-size:clamp(30px,8.4vw,50px);line-height:1.1;font-weight:700;letter-spacing:-.02em;margin-bottom:20px}
+  h1 em{font-style:normal;color:var(--pink)}
+  .lead{font-size:clamp(15px,4vw,17px);line-height:1.62;color:var(--soft);max-width:46ch;margin-bottom:14px}
+  .fact{font-size:13px;line-height:1.6;color:var(--dim);max-width:46ch;margin-bottom:36px}
+  .fact b{color:var(--warm);font-weight:600}
+
+  /* ——— карта районов ——— */
+  .maplabel{font-size:11px;letter-spacing:.2em;color:var(--dim);margin-bottom:12px}
+  .map{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
+  .d{position:relative;border:1px solid rgba(255,255,255,.06);background:var(--deep);
+     padding:10px 9px;cursor:pointer;transition:.22s ease;overflow:hidden}
+  .d:hover{border-color:var(--line);background:#120d1e}
+  .d.sel{border-color:var(--pink);background:#1a0f22}
+  .d .n{font-size:11.5px;color:var(--soft);line-height:1.25;margin-bottom:5px;position:relative;z-index:2}
+  .d .v{font-family:ui-monospace,Consolas,monospace;font-size:10px;color:var(--dim);position:relative;z-index:2}
+  .d.sel .v{color:var(--pink)}
+  .d i{position:absolute;left:0;right:0;bottom:0;height:var(--p);background:linear-gradient(to top,var(--pink),transparent);opacity:.5}
+  .mapnote{font-size:11.5px;color:#6b6180;line-height:1.55;margin-bottom:44px;max-width:48ch}
+  .mapnote b{color:var(--soft)}
+
+  /* ——— кубик ——— */
+  .cubehead{font-size:11px;letter-spacing:.2em;color:var(--dim);margin-bottom:6px}
+  .cubetitle{font-size:clamp(20px,5.4vw,28px);font-weight:600;margin-bottom:8px}
+  .cubetitle em{font-style:normal;color:var(--pink)}
+  .cubetext{font-size:14.5px;color:var(--soft);line-height:1.55;margin-bottom:26px;max-width:44ch}
+
+  .stage{position:relative;height:260px;margin:0 auto 22px;perspective:900px;overflow:hidden;
+    mask-image:linear-gradient(to bottom,transparent,#000 30%,#000 70%,transparent);
+    -webkit-mask-image:linear-gradient(to bottom,transparent,#000 30%,#000 70%,transparent)}
+  .drum{position:absolute;left:50%;top:50%;width:0;height:0;transform-style:preserve-3d}
+  .facet{position:absolute;left:-150px;top:-34px;width:300px;height:68px;
+    display:flex;align-items:center;justify-content:center;text-align:center;
+    font-size:14.5px;line-height:1.35;color:#8b7f9c;
+    background:var(--deep);border:1px solid rgba(255,255,255,.05);
+    backface-visibility:hidden;padding:0 14px}
+  .facet.on{color:var(--ink);border-color:var(--pink);background:#180e20;
+    box-shadow:0 0 26px rgba(232,93,168,.22)}
+
+  .gostamp{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);
+    font-family:ui-monospace,Consolas,monospace;font-size:10px;letter-spacing:.16em;color:#5c5270}
+
+  #roll{align-self:center;display:block;margin:0 auto;background:none;border:none;cursor:pointer;
+    color:var(--ink);font:inherit;font-size:17px;padding:13px 4px 11px;border-bottom:2px solid var(--pink);
+    transition:.25s}
+  #roll:hover{color:var(--pink);letter-spacing:.03em}
+  #roll:disabled{opacity:.4;cursor:default}
+
+  /* ——— выпавшая сцена ——— */
+  .scene{margin-top:30px;border:1px solid var(--line);background:linear-gradient(180deg,#100b19,#0b0814);
+    padding:24px 22px;opacity:0;transform:translateY(10px);transition:.5s ease}
+  .scene.on{opacity:1;transform:none}
+  .scene .sc-no{font-family:ui-monospace,Consolas,monospace;font-size:10.5px;letter-spacing:.18em;color:var(--pink);margin-bottom:12px}
+  .scene .q{font-size:clamp(16px,4.4vw,19px);line-height:1.55;margin-bottom:18px}
+  .scene .where{font-size:13px;line-height:1.6;color:var(--dim)}
+  .scene .where b{color:var(--warm);font-weight:600}
+  .scene .ask{margin-top:16px;font-size:13.5px;color:var(--soft);line-height:1.55}
+
+  .foot{margin-top:46px;font-size:12px;color:#5c5270;line-height:1.6}
+  .foot b{color:var(--dim)}
+  .tg{display:inline-block;margin-top:14px;color:var(--ink);text-decoration:none;font-size:14.5px;
+    padding:9px 2px 7px;border-bottom:2px solid var(--pink);transition:.2s}
+  .tg:hover{color:var(--pink)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="mark">розовый взгляд <b>👁</b> петербургское одиночество</div>
+  <h1>кубик <em>одиночества</em></h1>
+  <p class="lead">брось кубик — выпадет один вечер. один из тех, что были у каждого, кто жил здесь один.</p>
+  <p class="fact"><b>49%</b> петербургских домохозяйств — один человек (Росстат). почти каждый второй дом за стеной от тебя — на одного.</p>
+
+  <div class="maplabel">КАРТА · 18 РАЙОНОВ</div>
+  <div class="map" id="map"></div>
+  <p class="mapnote">высота столбика — плотность: сколько людей на квадратный километр. <b>чем ярче, тем теснее живут рядом</b> — и тем легче быть одному среди всех. районной статистики одиночества не существует: это модель плотности, не замер.</p>
+
+  <div class="cubehead">БРОСОК</div>
+  <div class="cubetitle">12 сцен одинокого вечера</div>
+  <p class="cubetext">крути — и держи лицо спокойным. вспомни хоть одну из них.</p>
+
+  <div class="stage" id="stage">
+    <div class="drum" id="drum"></div>
+    <div class="gostamp" id="stamp">готов к броску</div>
+  </div>
+  <button id="roll">бросить кубик →</button>
+
+  <div class="scene" id="scene">
+    <div class="sc-no" id="scNo"></div>
+    <p class="q" id="scQ"></p>
+    <p class="where" id="scW"></p>
+    <p class="ask">вспомнилось? ничего страшного — это было не с тобой одним.</p>
+  </div>
+
+  <div class="foot">
+    <b>кубик одиночества</b> — часть проекта «розовый взгляд».<br>
+    сцены — из жизни, не из статистики. цифры — из Росстата.
+    <a class="tg" href="https://t.me/p1nks1ght" target="_blank" rel="noopener">розовый взгляд →</a>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+
+  /* ——— районы: население, площадь, плотность (Петростат 2025) ——— */
+  var D = [
+    ["Приморский",704000,109.87,6408],["Невский",548800,61.80,8880],["Выборгский",541000,115.40,4688],
+    ["Калининский",530000,40.10,13217],["Красносельский",441000,115.00,3835],["Фрунзенский",413983,37.47,11048],
+    ["Красногвардейский",357000,56.80,6285],["Московский",346000,73.00,4740],["Кировский",336200,48.00,7004],
+    ["Пушкинский",277341,239.95,1156],["Василеостровский",209000,21.50,9721],["Центральный",200654,17.12,11720],
+    ["Колпинский",189870,105.60,1798],["Адмиралтейский",154424,13.83,11166],["Петроградский",130000,24.00,5417],
+    ["Петродворцовый",115400,115.34,1001],["Курортный",84414,267.00,316],["Кронштадтский",44414,19.90,2232]
+  ];
+  var maxP = 13217;
+  var map = $("map"), selected = null;
+  D.forEach(function(d, idx){
+    var el = document.createElement("div");
+    el.className = "d";
+    el.innerHTML = '<div class="n">' + d[0] + '</div><div class="v">' + d[3].toLocaleString("ru") + ' чел/км²</div>' +
+      '<i style="--p:' + Math.max(6, Math.round(d[3] / maxP * 100)) + '%"></i>';
+    el.addEventListener("click", function(){
+      var was = el.classList.contains("sel");
+      Array.prototype.forEach.call(map.children, function(c){ c.classList.remove("sel"); });
+      if (!was) { el.classList.add("sel"); selected = d; } else { selected = null; }
+      paint();
+    });
+    map.appendChild(el);
+  });
+
+  /* ——— 12 сцен ——— */
+  var S = [
+    {s:"окно", q:"сидел у окна, а за стеклом шёл снег — и было слышно, как внизу гудит машина"},
+    {s:"кухня", q:"чай в два ночи: свет только над столом, и тишина такая, что слышно холодильник"},
+    {s:"телефон", q:"листал ленту и знал, что не напишет никто — и всё равно листал"},
+    {s:"балкон", q:"выходил на балкон просто подышать, а город внизу жил без тебя"},
+    {s:"лифт", q:"ехал в лифте один и не смотрел на себя в зеркало"},
+    {s:"двор", q:"двор, где горел один фонарь, и твои шаги были единственным звуком"},
+    {s:"дорога", q:"шёл домой, когда окна чужих домов уже погасли, а твоё ещё нет"},
+    {s:"метро", q:"последний вагон — вы с отражением ехали вдвоём"},
+    {s:"комната", q:"свет от экрана ложился на потолок, и ты не выключал его до утра"},
+    {s:"крыша", q:"залез на крышу один, и небо было тёмно-красное от города"},
+    {s:"ванная", q:"вода шумела громче мыслей, и ты стоял под ней дольше, чем нужно"},
+    {s:"подъезд", q:"подъезд, где мигала лампочка, а ты не спешил подниматься"}
+  ];
+
+  /* ——— барабан на 12 граней ——— */
+  var drum = $("drum"), N = S.length, R = 150, ang = 0, rolling = false;
+  var facets = [];
+  for (var k = 0; k < N; k++){
+    var f = document.createElement("div");
+    f.className = "facet";
+    f.textContent = S[k].s;
+    f.style.transform = "rotateX(" + (-k * (360 / N)) + "deg) translateZ(" + R + "px)";
+    drum.appendChild(f);
+    facets.push(f);
+  }
+  var idx = 0;
+  function paint(){
+    drum.style.transform = "translateZ(-" + R + "px) rotateX(" + ang + "deg)";
+    var step = 360 / N;
+    var cur = ((Math.round(-ang / step) % N) + N) % N;
+    idx = cur;
+    facets.forEach(function(f, i){ f.classList.toggle("on", i === idx); });
+  }
+  paint();
+
+  $("roll").addEventListener("click", function(){
+    if (rolling) return;
+    rolling = true;
+    $("roll").disabled = true;
+    $("stamp").textContent = "крутится…";
+    var target = Math.floor(Math.random() * N);
+    var step = 360 / N;
+    var spins = 3 + Math.floor(Math.random() * 2);
+    var final = -(target * step) - spins * 360;
+    drum.style.transition = "transform 3s cubic-bezier(0.15, 0.85, 0.15, 1)";
+    ang = final;
+    drum.style.transform = "translateZ(-" + R + "px) rotateX(" + ang + "deg)";
+    setTimeout(function(){
+      drum.style.transition = "";
+      rolling = false;
+      $("roll").disabled = false;
+      paint();
+      $("stamp").textContent = "выпало: " + S[idx].s;
+      showScene();
+      if (navigator.vibrate) navigator.vibrate(18);
+    }, 3050);
+  });
+
+  function showScene(){
+    var sc = S[idx];
+    $("scNo").textContent = "СЦЕНА " + ("0" + (idx + 1)).slice(-2) + " · " + sc.s.toUpperCase();
+    $("scQ").textContent = "«" + sc.q + "»";
+    var w;
+    if (selected){
+      w = "район: <b>" + selected[0] + "</b> — " + selected[1].toLocaleString("ru") + " человек на " +
+          selected[2].toLocaleString("ru") + " км², плотность " + selected[3].toLocaleString("ru") + " чел/км². " +
+          "на такой площади это " + (selected[3] > 8000 ? "очень тесно — и всё равно можно быть одному" : "просторно — и всё равно можно быть одному") + ".";
+    } else {
+      w = "район не выбран — брось ещё раз или выбери район на карте, и сцена привяжется к нему.";
+    }
+    $("scW").innerHTML = w;
+    $("scene").classList.add("on");
+  }
+})();
+</script>
+</body>
+</html>
